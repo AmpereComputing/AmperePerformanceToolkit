@@ -1,0 +1,60 @@
+#!/bin/bash
+# Copyright (c) 2024, Ampere Computing LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+run_corewise()
+{
+	rm -rf ${5}/${1}/ffmpeg2pass*
+        cmd="numactl -C ${1} /usr/bin/time -f \"%U %S %e %P\" -o ${5}/vbench-logs/${2}_pass1_${1}.time ${6}/ffmpeg -i ${3} -c:v libx264 -threads 1 -y -loglevel warning -passlogfile ${5}/${1}/ffmpeg2pass -pass 1 -f null -an -sn -b:v ${4} -preset medium /dev/null;numactl -C ${1} /usr/bin/time -f \"%U %S %e %P\" -o ${5}/vbench-logs/${2}_pass2_${1}.time ${6}/ffmpeg -i ${3} -c:v libx264 -threads 1 -y -loglevel warning -passlogfile ${5}/${1}/ffmpeg2pass -pass 2 -b:v ${4} -preset medium -y ${5}/${2}_${1}.out.mkv </dev/null >& ${5}/vbench-logs/${2}_${1}.log"
+#        cmd="numactl -C ${1} ${6}/ffmpeg -i ${3} -c:v libx264 -threads 1 -y -loglevel warning -passlogfile ${5}/${1}/ffmpeg2pass -pass 1 -f null -an -sn -b:v ${4} -preset medium /dev/null;numactl -C ${1} ${6}/ffmpeg -i ${3} -c:v libx264 -threads 1 -y -loglevel warning -passlogfile ${5}/${1}/ffmpeg2pass -pass 2 -b:v ${4} -preset medium -y ${5}/${2}_${1}.out.mkv </dev/null >& ${5}/vbench-logs/${2}_${1}.log"
+#        local start_time=$(date +%s.%3N)
+        eval ${cmd}
+#        local end_time=$(date +%s.%3N)
+#        local elapsed=$(echo "scale=3; $end_time - $start_time" | bc)
+#        echo $elapsed > ${5}/vbench-logs/${2}_pass2_${1}.time
+}
+
+target_bitratearr=()
+scratch_dir={{ scratch_dir }}
+for VIDEO in {{ input_videos_dir }}/*.mkv; do
+    NAME="`basename ${VIDEO} .mkv`";
+    framerate=`{{ ffmpeg_dir }}/ffprobe -show_data ${VIDEO} 2>${scratch_dir}/temp_${NAME}.out; sleep 2;cat ${scratch_dir}/temp_${NAME}.out | grep "fps" | cut -d "," -f4 | cut -d" " -f2`
+    width=`cat ${scratch_dir}/temp_${NAME}.out | grep "fps" | cut -d "," -f3 | cut -d"x" -f1 | sed -e "s/ //g"`
+    height=`cat ${scratch_dir}/temp_${NAME}.out | grep "fps" | cut -d "," -f3 | cut -d"x" -f2 | cut -d" " -f1 | sed -e "s/ //g"`;
+    resolution=`echo $(( ${width} * ${height} ))`
+    bitrate=`cat ${scratch_dir}/temp_${NAME}.out | grep "bitrate" | cut -d "," -f3| cut -d":" -f2 | cut -d" " -f2 | sed -e "s/ //g"`
+    bitrate=$(($bitrate * 1000));
+    use_bitrate=$(($bitrate / 2));
+    if (( $(echo "${framerate} > 30" | bc -l) )); then
+            target_bitrate=$(( 3 * ${resolution} ));
+    else
+            target_bitrate=$(( 2 * ${resolution} ));
+    fi;
+    if (( $(echo "${target_bitrate} > ${use_bitrate}" | bc -l) )); then
+            target_bitrate=${use_bitrate};
+    fi;
+    target_bitratearr+=(${target_bitrate})
+done
+echo ${target_bitratearr[@]}
+target_bitrate_index=0
+for VIDEO in {{ input_videos_dir }}/*.mkv; do
+    NAME="`basename ${VIDEO} .mkv`";
+    for CORE in {{ bash_sequences }}; do
+	    mkdir -p ${scratch_dir}/${CORE}
+            run_corewise ${CORE} ${NAME} ${VIDEO} ${target_bitratearr[${target_bitrate_index}]} ${scratch_dir} {{ ffmpeg_dir }} &
+            done
+            wait
+    target_bitrate_index=$(( ${target_bitrate_index} + 1))
+done
+wait

@@ -1,0 +1,49 @@
+# Modifications Copyright (c) 2024 Ampere Computing LLC
+From 290462265ea54bd3f4895964fdc81a7d79a737a9 Mon Sep 17 00:00:00 2001
+From: Jiangning Liu <jiangning.liu@amperecomputing.com>
+Date: Thu, 21 Mar 2024 16:52:28 -0700
+Subject: [PATCH 1/1] Enable SHA3 unrolling and EOR3 optimization for Ampere
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23929)
+---
+ crypto/arm_arch.h | 1 +
+ crypto/armcap.c   | 6 ++++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/crypto/arm_arch.h b/crypto/arm_arch.h
+index 7ac978f..acd8aee 100644
+--- a/crypto/arm_arch.h
++++ b/crypto/arm_arch.h
+@@ -104,6 +104,7 @@ extern unsigned int OPENSSL_armv8_rsa_neonized;
+ # define HISI_CPU_IMP              0x48
+ # define ARM_CPU_IMP_APPLE         0x61
+ # define ARM_CPU_IMP_MICROSOFT     0x6D
++# define ARM_CPU_IMP_AMPERE        0xC0
+ 
+ # define ARM_CPU_PART_CORTEX_A72   0xD08
+ # define ARM_CPU_PART_N1           0xD0C
+diff --git a/crypto/armcap.c b/crypto/armcap.c
+index 781503e..01be1a4 100644
+--- a/crypto/armcap.c
++++ b/crypto/armcap.c
+@@ -419,11 +419,13 @@ void OPENSSL_cpuid_setup(void)
+     if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V1) ||
+          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_N2) ||
+          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_MICROSOFT, MICROSOFT_CPU_PART_COBALT_100) ||
+-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V2)) &&
++         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V2) ||
++         MIDR_IMPLEMENTER(OPENSSL_arm_midr) == ARM_CPU_IMP_AMPERE) &&
+         (OPENSSL_armcap_P & ARMV8_SHA3))
+         OPENSSL_armcap_P |= ARMV8_UNROLL8_EOR3;
+     if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V1) ||
+-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V2)) &&
++         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V2) ||
++         MIDR_IMPLEMENTER(OPENSSL_arm_midr) == ARM_CPU_IMP_AMPERE) &&
+         (OPENSSL_armcap_P & ARMV8_SHA3))
+         OPENSSL_armcap_P |= ARMV8_UNROLL12_EOR3;
+     if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_FIRESTORM)     ||
+-- 
+2.27.0
+

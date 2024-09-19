@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+click==8.0.3
+tabulate
+loguru>=0.5.0
 rsa>=4.7.2
 absl-py
 jinja2>=2.10.2
@@ -21,7 +24,7 @@ packaging
 pandas>=1.1.5
 PyYAML>=5.4.1
 pint
-numpy>=1.16.5
+numpy>=1.16.5,<2.0
 contextlib2>=0.5.1
 six>=1.13.0
 pywinrm
@@ -33,6 +36,8 @@ google-cloud-monitoring>=2.0.0
 beautifulsoup4
 requests
 seaborn
+ptyprocess==0.7.0
+python-dotenv==1.0.1
 
 # unlike setup.py requirements.txt cannot require a Python version AFAICT
 # this hack requires a non-existent package when Python is less than 3.11

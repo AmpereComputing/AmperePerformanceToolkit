@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# Modifications Copyright (c) 2024 Ampere Computing LLC
-# Copyright 2014 PerfKitBenchmarker Authors. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2024, Ampere Computing LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+for CORE in {{ bash_sequences }}; do
+	for VIDEO in {{ input_videos_dir }}/*.mkv; do
+		NAME="`basename ${VIDEO} .mkv`"
+		numactl -C ${CORE} /usr/bin/time -f "%U %S %e %P" -o {{ log_dir }}/${NAME}_${CORE}.time \
+			{{ ffmpeg_dir }}/ffmpeg -y -i ${VIDEO} -c:v libx264 -preset medium -crf 18 -threads 1 -an -sn \
+			${NAME}_${CORE}.out.mkv </dev/null &> {{ log_dir }}/${NAME}_${CORE}.log
+	done &
+done
 
-from perfkitbenchmarker.pkb import Main
-try:
-    from ampere.pkb.bootstrap import bootstrap as ampere_bootstrap_pkb
-    ampere_bootstrap_pkb()
-except ImportError:
-    ampere_bootstrap_pkb = None
-
-sys.exit(Main())
+wait

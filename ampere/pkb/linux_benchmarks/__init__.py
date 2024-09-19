@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Modifications Copyright (c) 2024 Ampere Computing LLC
 # Copyright 2014 PerfKitBenchmarker Authors. All rights reserved.
 #
@@ -14,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 
-from perfkitbenchmarker.pkb import Main
-try:
-    from ampere.pkb.bootstrap import bootstrap as ampere_bootstrap_pkb
-    ampere_bootstrap_pkb()
-except ImportError:
-    ampere_bootstrap_pkb = None
+from perfkitbenchmarker import import_util
+from perfkitbenchmarker.linux_benchmarks import VALID_BENCHMARKS
 
-sys.exit(Main())
+
+def _LoadBenchmarks():
+    return list(import_util.LoadModulesForPath(__path__, __name__))
+
+AMPERE_PKB_BENCHMARKS = _LoadBenchmarks()
+
+for module in AMPERE_PKB_BENCHMARKS:
+    VALID_BENCHMARKS[module.BENCHMARK_NAME] = module
