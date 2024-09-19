@@ -1,0 +1,52 @@
+# Copyright (c) 2024, Ampere Computing LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Use this config:
+#   - ./pkb.py --benchmarks=ampere_nginx_wrk
+  #--benchmark_config_file=nginx.yaml
+# To view available flags:  
+#   - ./pkb.py --helpmatch=ampere.pkb.linux_benchmarks.nginx_wrk_benchmark
+#   - ./pkb.py --helpmatch=ampere.pkb.linux_packages.nginx
+#   - ./pkb.py --helpmatch=ampere.pkb.linux_packages.wrk
+
+server: &server-A1
+  cloud: OCI
+  vm_spec:
+    OCI:
+      machine_type: VM.Standard.A1.Flex
+      zone: us-ashburn-1
+      oci_availability_domain: MBWR:US-ASHBURN-AD-1
+      oci_fault_domain: FAULT-DOMAIN-3
+      oci_compute_units: 16
+      oci_compute_memory: 64
+  os_type: ubuntu2204
+  vm_count: 1
+
+client: &client-A1
+  cloud: OCI
+  vm_spec:
+    OCI:
+      machine_type: VM.Standard.A1.Flex
+      zone: us-ashburn-1
+      oci_availability_domain: MBWR:US-ASHBURN-AD-1
+      oci_fault_domain: FAULT-DOMAIN-3      
+      oci_compute_units: 32
+      oci_compute_memory: 128
+  os_type: ubuntu2204
+  vm_count: 1
+
+ampere_nginx_wrk:
+  vm_groups:
+    servers: *server-A1
+    clients: *client-A1

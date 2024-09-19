@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 # Modifications Copyright (c) 2024 Ampere Computing LLC
-# Copyright 2014 PerfKitBenchmarker Authors. All rights reserved.
+# Copyright 2016 PerfKitBenchmarker Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+from perfkitbenchmarker import os_types
 
-from perfkitbenchmarker.pkb import Main
-try:
-    from ampere.pkb.bootstrap import bootstrap as ampere_bootstrap_pkb
-    ampere_bootstrap_pkb()
-except ImportError:
-    ampere_bootstrap_pkb = None
 
-sys.exit(Main())
+ORACLE8 = 'oracle8'
+ORACLE9 = 'oracle9'
+
+
+LINUX_OS_TYPES = [
+    ORACLE8,
+    ORACLE9,
+]
+os_types.ALL.extend(LINUX_OS_TYPES)

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# Modifications Copyright (c) 2024 Ampere Computing LLC
-# Copyright 2014 PerfKitBenchmarker Authors. All rights reserved.
+# Copyright (c) 2024, Ampere Computing LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+"""Provider info for OCI."""
 
-from perfkitbenchmarker.pkb import Main
-try:
-    from ampere.pkb.bootstrap import bootstrap as ampere_bootstrap_pkb
-    ampere_bootstrap_pkb()
-except ImportError:
-    ampere_bootstrap_pkb = None
+from perfkitbenchmarker import provider_info
+from ampere.pkb.provider_info import OCI
 
-sys.exit(Main())
+
+class OCIProviderInfo(provider_info.BaseProviderInfo):
+    UNSUPPORTED_BENCHMARKS = ['mysql_service']
+    CLOUD = OCI
