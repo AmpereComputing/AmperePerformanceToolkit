@@ -100,6 +100,8 @@ If the system does not already have Python 3.11 or higher, install it explicitly
 sudo dnf install python3.11
 ```
 
+If Nix or NixOS is installed, `nix develop` can be used to be dropped into a development shell which can run APT without venv.
+
 ## Setup APT
 
 Create a new virtual environment
